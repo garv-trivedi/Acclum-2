@@ -8,14 +8,18 @@ def the_R_vs_T_part(p):
     radii = generate_pattern(r_o_rs)
 
     # Defining temperature at different radii
-    temperatures = []
-    for i in radii:
-        try:
-            t = temp(i)
-            temperatures.append(t)
-        except:
-            temperatures.append(0)
+   import numpy as np
 
+def temp_region_a(r, alpha, m):
+    """Exact Shakura-Sunyaev Region (a) Temperature T(r) [K]."""
+    return (2.3e7) * ((alpha * m) ** -0.25) * (r ** -0.75)
+
+def density_region_a(r, alpha, m, m_dot, f1=1.0, eta_E=0.06):
+    """Restored Region (a) Number Density n(r) [cm^-3] (Equation 14)."""
+    f_eta_factor = (f1 * (0.06 / eta_E)) ** (-2)
+    boundary_term = (1.0 - (1.0 / np.sqrt(r))) ** (-2)
+    return 4.3e17 * f_eta_factor * (alpha ** -1) * (m ** -1) * (m_dot ** -2) * (r ** 1.5) * boundary_term
+    
     # Storing values of r and t together in R_vs_T
     dataset=pd.DataFrame({"radius in rs":radii,"temperatures":temperatures})
 
