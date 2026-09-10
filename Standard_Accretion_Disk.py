@@ -382,6 +382,10 @@ def get_region_a_data(m, m_dot, alpha, f1=1.0, eta_E=0.06, r_in=1.01, num_points
     
     return r_grid, T_vals, n_vals, r_ab
 
+# --- Global Fallback Defaults ---
+r_ab = 50.54
+alpha_val = 0.1
+
 def temp(rr):
     """
     Piecewise disk temperature profile:
