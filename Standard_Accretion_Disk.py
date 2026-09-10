@@ -599,7 +599,7 @@ def the_Frequency_vs_Luminosity_part2(p):
 
     #integrating the luminosity density curve wuth respect to frequency to get Luminosity
     L=integrate_curve(frequencies,luminosities,a=1e10,b=1e15)
-    L_np=np.trapz(luminosities,frequencies)
+    L_np=np.trapezoid(luminosities,frequencies)
 
     st.success(f"""
     Bolometric Luminosity 
