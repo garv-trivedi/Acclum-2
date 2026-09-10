@@ -509,6 +509,37 @@ def the_R_vs_T_part(p):
     elif option == "graph of (R vs T) without logscale":
         plotit(radii, temperatures,xlabel="Radius (Rs)",ylabel="Temperature  (K)")
 #---------------------------------------------------------------------------------------------------------
+def the_region_a_part():
+    st.markdown('# Region (a) Inner Disk Profiles (Shakura-Sunyaev)')
+    
+    col1, col2 = st.columns(2)
+    with col1:
+        alpha_val = st.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
+        f1_val = st.number_input("f1 parameter", value=1.0, step=0.1)
+    with col2:
+        eta_E_val = st.number_input("Radiative Efficiency (η_E)", value=0.06, step=0.01)
+        r_in_val = st.number_input("Inner truncation radius (r_in in R_S)", value=1.01, min_value=1.001)
+
+    # Compute data using sidebar mass (m_bh) and calculated accretion rate (m_dot)
+    # convert m_dot back to Eddington/solar unit scale expected by lookup/Eq 14 if needed
+    m_dot_edd = (m_dot * c**2) / (1.3e31 * m_bh)
+    
+    r_grid, T_vals, n_vals, r_ab = get_region_a_data(
+        m=m_bh, 
+        m_dot=m_dot_edd, 
+        alpha=alpha_val, 
+        f1=f1_val, 
+        eta_E=eta_E_val, 
+        r_in=r_in_val
+    )
+
+    st.info(f"Transition Radius $r_{{s,ab}} = {r_ab:.2f} \, R_S$")
+
+    # Render plots
+    fig = plot_region_a(r_grid, T_vals, n_vals, r_ab)
+    st.pyplot(fig)
+
+#---------------------------------------------------------------------------------------------------------
 
 def the_Frequency_vs_Luminosity_part2(p):
     global frequencies, luminosities
@@ -865,23 +896,33 @@ def the_Frequency_vs_Luminosity_part2(p):
 
 #---------------------------------------------------------------------------------------------------------        
 def run(p):
-    p+=1
+    p += 1
     st.markdown('# Spectrum of Standard Accretion Disk')
-    
-    option_selected = st.selectbox("Select Property :", ["Luminosity profile",\
-                                                         "Temperature Profile"\
-                                               ], key="run_selectbox")
+
+    option_selected = st.selectbox(
+        "Select Property :",
+        [
+            "Luminosity profile",
+            "Temperature Profile",
+            "Region (a) Inner Disk Profile",  # <-- Added option
+        ],
+        key="run_selectbox",
+    )
 
     if option_selected == "Temperature Profile":
-        p+=1
+        p += 1
         the_R_vs_T_part(p)
-        
-    
+
     elif option_selected == "Luminosity profile":
-        p+=1
+        p += 1
         the_Frequency_vs_Luminosity_part2(p)
-    
-p=1
+
+    elif option_selected == "Region (a) Inner Disk Profile":  # <-- Added handler
+        p += 1
+        the_region_a_part()
+
+
+p = 1
 run(p)
 
 #--------------------------------------------------------------------------------------------------------
