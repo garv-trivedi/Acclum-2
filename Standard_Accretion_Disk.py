@@ -382,6 +382,21 @@ def get_region_a_data(m, m_dot, alpha, f1=1.0, eta_E=0.06, r_in=1.01, num_points
     
     return r_grid, T_vals, n_vals, r_ab
 
+def temp(rr):
+    """
+    Piecewise disk temperature profile:
+    Uses Shakura-Sunyaev Region (a) for r <= r_ab,
+    and standard disk formulation for r > r_ab.
+    """
+    global r_ab, alpha_val
+    if rr <= r_ab:
+        return temp_region_a(rr, alpha_val, m_bh)
+    else:
+        r = rr * r_s
+        t1 = (INNER_R / r) ** (3 / 4)
+        t2 = (1.0 - (INNER_R / r) ** 0.5) ** (1 / 4)
+        return t_disk * t1 * t2
+
 #-----------------------------------SECTION 4----------------------------------------------------------------------
 #TAKE INPUTS
 st.sidebar.markdown('# Input values')
@@ -454,60 +469,53 @@ F2 = {F2:e} Hz
 F2/F1 = {F2/F1:e}
 """)
 
+# Add alpha input in sidebar inputs
+alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
+
+# Convert m_dot to Eddington units to query R_AB_LOOKUP
+m_dot_edd = (m_dot * c**2) / (1.3e31 * m_bh)
+
+# Retrieve r_ab boundary radius from constants
+r_ab = R_AB_LOOKUP.get((m_bh, round(m_dot_edd, 2)), 50.54)
+
+# Display r_ab explicitly under Sidebar Parameters
+st.sidebar.subheader('Parameters')
+st.sidebar.metric(label="Region (a) Boundary ($r_{ab}$)", value=f"{r_ab:.2f} R_S")
+
 #----------------------------------SECTION 5-----------------------------------------------------------------------
 
 def the_R_vs_T_part(p):
-    p+=1
-    global radii, temperatures, tmax
-    st.markdown('# Radius-Temperature relationship')
-    st.latex(r"where, T(r)^4 =\left( \frac {3GM_{BH}\dot{M}} {8 \pi \sigma}\right)\left [\frac{1 - \sqrt{\frac{r_{\scriptscriptstyle \mathrm{ISCO}}}{r}}}{r^3} \right]")
-    # Creating list of radii
+    p += 1
+    st.markdown('# Radius-Temperature Relationship')
+    
+    # Explicit banner highlighting r_ab
+    st.info(f"**Region (a) Boundary Active:** $r_{{ab}} = {r_ab:.2f} \\, R_S$. Exact analytic scaling applied for $r \\le {r_ab:.2f} \\, R_S$; standard multi-temperature blackbody applied for $r > {r_ab:.2f} \\, R_S$.")
+
     radii = generate_pattern(r_o_rs)
+    temperatures = [temp(i) for i in radii]
 
-    # Defining temperature at different radii
-    temperatures = []
-    for i in radii:
-        try:
-            t = temp(i)
-            temperatures.append(t)
-        except:
-            temperatures.append(0)
+    dataset = pd.DataFrame({"radius in rs": radii, "temperatures": temperatures})
 
-    # Storing values of r and t together in R_vs_T
-    dataset=pd.DataFrame({"radius in rs":radii,"temperatures":temperatures})
+    # Plotting with boundary line
+    fig, ax = plt.subplots(figsize=(8, 4.5))
+    ax.plot(radii, temperatures, label="Disk T(r)", color="black", lw=2)
+    
+    # Red vertical line at r = r_ab
+    ax.axvline(x=r_ab, color="crimson", linestyle="--", linewidth=1.5, label=f"$r_{{ab}} = {r_ab:.2f} \\, R_S$")
+    
+    # Region annotations on graph
+    max_t = max(temperatures) if len(temperatures) > 0 else 1e6
+    ax.text(r_ab * 0.3 if r_ab * 0.3 > 1 else 1.1, max_t * 0.3, "Region (a)", color="crimson", fontweight="bold")
+    ax.text(r_ab * 2.0, max_t * 0.3, "Region (b/c)", color="navy", fontweight="bold")
 
-    # Finding maximum and minimum temperatures
-    try:
-        tmax = max(temperatures)
-        tmin = min(temperatures)
-    except:
-        tmin, tmax = 'undetermined', 'undetermined'
-    try:     
-       # Finding r at maximum temperature
-        r_tmax = dataset.loc[dataset['temperatures'] == tmax, 'radius in rs'].values[0]
-        #display maximum temprature
-        st.info(f'The maximum temperature = {tmax:e} K observed at radius {r_tmax:e} Rs.')
-        st.info(f'The minimum temperature = {temp(r_o_rs)} K ')
-    except:
-        st.warning('there is some issue in calculating error')
+    ax.set_xscale('log')
+    ax.set_yscale('log')
+    ax.set_xlabel("Radius ($R_S$)")
+    ax.set_ylabel("Temperature (K)")
+    ax.grid(True, which="both", ls="--", alpha=0.5)
+    ax.legend()
 
-    # Display options for viewing data
-    option = st.selectbox("Select:", ["graph of (R vs T) in logscale",\
-                                      "data table of (R vs T)?",\
-                                     "graph of (R vs T) without logscale"], key='tvrhere2201{p}')  # Unique key
-
-    if option == "data table of (R vs T)?":
-        save_data(dataset)
-        if st.button("show data"):
-            st.table(dataset)
-            
-
-    # Plotting the graph for radius vs temperature
-    elif option == "graph of (R vs T) in logscale":
-        plot_log_scale(radii, temperatures,1,r_o_rs,tmin,tmax,temperature=True,xlabel="log(radius) (Rs)",ylabel="log(temperature) (K)")
-
-    elif option == "graph of (R vs T) without logscale":
-        plotit(radii, temperatures,xlabel="Radius (Rs)",ylabel="Temperature  (K)")
+    st.pyplot(fig)
 #---------------------------------------------------------------------------------------------------------
 def the_region_a_part():
     st.markdown('# Region (a) Inner Disk Profiles (Shakura-Sunyaev)')
