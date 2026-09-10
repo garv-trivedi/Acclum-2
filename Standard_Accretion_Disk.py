@@ -10,6 +10,7 @@ from io import BytesIO
 import base64
 from constants import R_AB_LOOKUP
 from Temp_Profile import density_region_a, temp_region_a
+from The_Plotting_function import plot_region_a
 
 #st.write("ACCLUM-1.00")
 #----------------------------------SECTION 1----------------------------------------------------------
