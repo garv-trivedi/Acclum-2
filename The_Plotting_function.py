@@ -88,3 +88,26 @@ def plot_log_scale(x_list, y_list,xo,xn,yo,yn,temperature=False,spectrumv=False,
     else:
         st.pyplot(plt.gcf())
     savethegraph()
+
+def plot_region_a(r_grid, T_vals, n_vals, r_ab):
+    """Returns a Matplotlib figure for Region (a) profiles."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 4.5))
+
+    # Temperature Plot
+    ax1.plot(r_grid, T_vals, color="firebrick", lw=2)
+    ax1.set_xlabel(r"Radius $r = R / R_S$")
+    ax1.set_ylabel(r"Temperature $T(r)$ [K]")
+    ax1.set_yscale("log")
+    ax1.set_title(f"Region (a) $T(r)$ up to $r_{{s,ab}} = {r_ab} R_S$")
+    ax1.grid(True, which="both", ls="--", alpha=0.5)
+
+    # Density Plot
+    ax2.plot(r_grid, n_vals, color="navy", lw=2)
+    ax2.set_xlabel(r"Radius $r = R / R_S$")
+    ax2.set_ylabel(r"Number Density $n(r)$ [$\mathrm{cm}^{-3}$]")
+    ax2.set_yscale("log")
+    ax2.set_title("Region (a) Restored Density (Eq. 14)")
+    ax2.grid(True, which="both", ls="--", alpha=0.5)
+
+    plt.tight_layout()
+    return fig
