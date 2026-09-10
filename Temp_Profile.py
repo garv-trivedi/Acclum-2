@@ -1,3 +1,4 @@
+import numpy as np
 
 def the_R_vs_T_part(p):
     p+=1
@@ -7,8 +8,6 @@ def the_R_vs_T_part(p):
     # Creating list of radii
     radii = generate_pattern(r_o_rs)
 
-    # Defining temperature at different radii
-   import numpy as np
 
 def temp_region_a(r, alpha, m):
     """Exact Shakura-Sunyaev Region (a) Temperature T(r) [K]."""
