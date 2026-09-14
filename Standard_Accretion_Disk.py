@@ -181,15 +181,7 @@ def ff2(r):
         # Use the unified temperature profile
         T_r = temp(rr)
 
-        # Temporary debugging
-        if abs(rr - 50.0) < 0.1 or abs(rr - r_ab) < 0.1:
-            st.write(
-                "DEBUG SPECTRUM:",
-                "R/Rs =", rr,
-                "T =", T_r,
-                "r_ab =", r_ab
-            )
-
+    
         x = h * f / (k * T_r)
 
         # Avoid numerical overflow
