@@ -497,12 +497,12 @@ cos_i = np.cos(np.radians(angle_inclination))
 t_disk=(3*G*m_bh_kg*m_dot/(8*pi*sbc*(INNER_R**3)))**0.25
 
 #DEBUGGING------------------------------------------------------------------------------------------------------------------------------
-st.write("T at 3 Rs  =", temp(3.0))
-st.write("T at 10 Rs =", temp(10.0))
-st.write("T at 30 Rs =", temp(30.0))
-st.write("T at 50 Rs =", temp(50.0))
-st.write("T at r_ab =", temp(r_ab))
-st.write("T at 100 Rs =", temp(100.0))
+#st.write("T at 3 Rs  =", temp(3.0))
+#st.write("T at 10 Rs =", temp(10.0))
+#st.write("T at 30 Rs =", temp(30.0))
+#st.write("T at 50 Rs =", temp(50.0))
+#st.write("T at r_ab =", temp(r_ab))
+#st.write("T at 100 Rs =", temp(100.0))
 
 t_o = temp(r_o_rs)
 t_i = temp(r_i_rs)
