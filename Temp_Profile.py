@@ -9,15 +9,41 @@ def the_R_vs_T_part(p):
     radii = generate_pattern(r_o_rs)
 
 
-def temp_region_a(r, alpha, m):
-    """Exact Shakura-Sunyaev Region (a) Temperature T(r) [K]."""
-    return (2.3e7) * ((alpha * m) ** -0.25) * (r ** -0.75)
+def temp_region_a(r_rs, alpha, m):
+    """
+    Region (a) temperature.
+    r_rs = R / R_S
+    m    = M_BH / M_sun
+    """
 
-def density_region_a(r, alpha, m, m_dot, f1=1.0, eta_E=0.06):
-    """Restored Region (a) Number Density n(r) [cm^-3] (Equation 14)."""
-    f_eta_factor = (f1 * (0.06 / eta_E)) ** (-2)
-    boundary_term = (1.0 - (1.0 / np.sqrt(r))) ** (-2)
-    return 4.3e17 * f_eta_factor * (alpha ** -1) * (m ** -1) * (m_dot ** -2) * (r ** 1.5) * boundary_term
+    r_rs = np.asarray(r_rs, dtype=float)
+
+    return (
+        2.3e7
+        * 3.0**(3.0 / 4.0)
+        * (alpha * m)**(-1.0 / 4.0)
+        * r_rs**(-3.0 / 4.0)
+    )
+    
+def density_region_a(r_rs, alpha, m, mdot_edd,
+                     f1=1.0, eta_E=0.06):
+
+    r_rs = np.asarray(r_rs, dtype=float)
+
+    boundary_term = (
+        1.0 - np.sqrt(3.0 / r_rs)
+    )**(-2)
+
+    return (
+        4.3e17
+        * 3.0**(-3.0 / 2.0)
+        * (f1 * (0.06 / eta_E))**(-2)
+        * alpha**(-1.0)
+        * m**(-1.0)
+        * mdot_edd**(-2.0)
+        * r_rs**(3.0 / 2.0)
+        * boundary_term
+    )
     
     # Storing values of r and t together in R_vs_T
     dataset=pd.DataFrame({"radius in rs":radii,"temperatures":temperatures})
