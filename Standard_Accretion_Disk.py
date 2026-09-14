@@ -505,6 +505,14 @@ if choice =='Eddington ratio and accretion efficiency':
     accretion_efficiency = st.sidebar.number_input("Accretion efficiency ($\zeta$)", value=1e-1, format="%e")
     m_dot=m_dotf(eddington_ratio,accretion_efficiency)
 
+#DEBUGGING------------------------------------------------------------------------------------------------------------------------------
+st.write("T at 3 Rs  =", temp(3.0))
+st.write("T at 10 Rs =", temp(10.0))
+st.write("T at 30 Rs =", temp(30.0))
+st.write("T at 50 Rs =", temp(50.0))
+st.write("T at r_ab =", temp(r_ab))
+st.write("T at 100 Rs =", temp(100.0))
+
 # Add alpha input in sidebar inputs
 alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
 angle_inclination = st.sidebar.number_input("Angle of inclination in degrees", value=0,format='%e')
