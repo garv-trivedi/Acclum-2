@@ -183,8 +183,6 @@ def ff2(r):
         # Use the SAME temperature profile used everywhere else.
         T_r = temp(rr)
 
-        x = h * f / (k * T_r)
-
     if abs(rr - 50.0) < 0.1 or abs(rr - r_ab) < 0.1:
         st.write(
             "DEBUG SPECTRUM:",
@@ -192,13 +190,18 @@ def ff2(r):
             "T =", T_r,
             "r_ab =", r_ab
         )
+        
+        x = h * f / (k * T_r)
 
-    x = h * f / (k * T_r)
+        # Avoid numerical overflow in exp(x)
+        if x > 700:
+            return 0.0
 
-    if x > 700:
+        return r / np.expm1(x)
+
+    except Exception as e:
+        print(f"Error at f={f}, r={r}: {e}")
         return 0.0
-
-    return r / np.expm1(x)
 def luminosity2(ff):
     #print('in luminosity function')
     global f
