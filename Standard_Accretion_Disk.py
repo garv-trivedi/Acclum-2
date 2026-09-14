@@ -403,14 +403,39 @@ def create_cloudy_sed(ryd_list,nuLnu_list,filename="my_sed.txt"):
         mime="text/plain",
     )
 
-def get_region_a_data(m, m_dot, alpha, f1=1.0, eta_E=0.06, r_in=1.01, num_points=500):
-    """Generates radial array, T(r), and n(r) for Region (a)."""
-    r_ab = R_AB_LOOKUP.get((m, m_dot), 50.54)
+def get_region_a_data(
+    m,
+    mdot_edd,
+    alpha,
+    f1=1.0,
+    eta_E=0.06,
+    r_in=3.01,
+    num_points=500
+):
+    """Generate Region-(a) radial profiles."""
+
+    r_ab = R_AB_LOOKUP.get(
+        (m, round(mdot_edd, 2)),
+        50.54
+    )
+
     r_grid = np.linspace(r_in, r_ab, num_points)
-    
-    T_vals = temp_region_a(r_grid, alpha, m)
-    n_vals = density_region_a(r_grid, alpha, m, m_dot, f1, eta_E)
-    
+
+    T_vals = temp_region_a(
+        r_grid,
+        alpha,
+        m
+    )
+
+    n_vals = density_region_a(
+        r_grid,
+        alpha,
+        m,
+        mdot_edd,
+        f1,
+        eta_E
+    )
+
     return r_grid, T_vals, n_vals, r_ab
 
 # --- Global Fallback Defaults ---
