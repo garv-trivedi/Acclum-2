@@ -156,7 +156,15 @@ def simpsons_one_third_rule(ff, a, b, n,f):
 #defining funtion to be integrated
 def ff(x):
     return (x**(5/3)) / (np.exp(x)-1)
-    
+
+st.write("DEBUG r_i/Rs =", r_i / r_s)
+st.write("DEBUG r_ab/Rs =", r_ab)
+st.write("DEBUG r_o/Rs =", r_o / r_s)
+st.write("DEBUG M =", m_bh)
+st.write("DEBUG mdot_edd =", m_dot_edd)
+st.write("DEBUG r_ab =", r_ab)
+st.write("DEBUG lookup key =", (m_bh, round(m_dot_edd, 2)))
+
 def luminosity(f):
     #print('in luminosity function')
 
