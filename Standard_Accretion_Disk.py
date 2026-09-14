@@ -115,12 +115,22 @@ def Rs(m):
 
 #temperature
 def temp(rr):
-    global t1,t2,t,r,t_disk
-    r=rr*r_s
-    t1= (INNER_R/r)**(3/4)
-    t2= (1-(INNER_R/(r))**0.5)**(1/4)
-    t=t_disk*t1*t2
-    return(t)
+    """
+    Unified disk temperature profile.
+
+    rr = R / R_S
+    """
+
+    if rr <= r_ab:
+        return temp_region_a(rr, alpha_val, m_bh)
+
+    else:
+        r = rr * r_s
+
+        t1 = (INNER_R / r) ** (3.0 / 4.0)
+        t2 = (1.0 - np.sqrt(INNER_R / r)) ** (1.0 / 4.0)
+
+        return t_disk * t1 * t2
 
 #integrating method
 def simpsons_one_third_rule(ff, a, b, n,f):
@@ -157,11 +167,32 @@ def luminosity(f):
     lum=const*integration
     return lum
 def ff2(r):
+    """
+    Radial Planck-function integrand.
+
+    r is physical radius in metres.
+    """
+
     try:
-        t1= 3*G*m_bh_kg*m_dot/(8*pi*sbc)    
-        return (r) / (np.exp(h*f/(k*((t1*((1-(INNER_R/(r))**0.5)/r**3))**0.25)))-1)
-    except:
-        print(f'there is an error at f={f}, r={r}')
+
+        # Convert physical radius R [m]
+        # to the app's dimensionless R/R_S coordinate.
+        rr = r / r_s
+
+        # Use the SAME temperature profile used everywhere else.
+        T_r = temp(rr)
+
+        x = h * f / (k * T_r)
+
+        # Avoid numerical overflow in exp(x)
+        if x > 700:
+            return 0.0
+
+        return r / np.expm1(x)
+
+    except Exception as e:
+        print(f"Error at f={f}, r={r}: {e}")
+        return 0.0
 def luminosity2(ff):
     #print('in luminosity function')
     global f
@@ -388,17 +419,20 @@ alpha_val = 0.1
 
 def temp(rr):
     """
-    Piecewise disk temperature profile:
-    Uses Shakura-Sunyaev Region (a) for r <= r_ab,
-    and standard disk formulation for r > r_ab.
+    Unified disk temperature profile.
+
+    rr = R / R_S
     """
-    global r_ab, alpha_val
+
     if rr <= r_ab:
         return temp_region_a(rr, alpha_val, m_bh)
+
     else:
         r = rr * r_s
-        t1 = (INNER_R / r) ** (3 / 4)
-        t2 = (1.0 - (INNER_R / r) ** 0.5) ** (1 / 4)
+
+        t1 = (INNER_R / r) ** (3.0 / 4.0)
+        t2 = (1.0 - np.sqrt(INNER_R / r)) ** (1.0 / 4.0)
+
         return t_disk * t1 * t2
 
 #-----------------------------------SECTION 4----------------------------------------------------------------------
