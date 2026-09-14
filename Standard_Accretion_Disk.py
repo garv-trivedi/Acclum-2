@@ -171,29 +171,28 @@ def ff2(r):
     """
     Radial Planck-function integrand.
 
-    r is physical radius in metres.
+    r is the physical radius in metres.
     """
 
     try:
-
-        # Convert physical radius R [m]
-        # to the app's dimensionless R/R_S coordinate.
+        # Convert physical radius R [m] to R/Rs
         rr = r / r_s
 
-        # Use the SAME temperature profile used everywhere else.
+        # Use the unified temperature profile
         T_r = temp(rr)
 
-    if abs(rr - 50.0) < 0.1 or abs(rr - r_ab) < 0.1:
-        st.write(
-            "DEBUG SPECTRUM:",
-            "R/Rs =", rr,
-            "T =", T_r,
-            "r_ab =", r_ab
-        )
-        
+        # Temporary debugging
+        if abs(rr - 50.0) < 0.1 or abs(rr - r_ab) < 0.1:
+            st.write(
+                "DEBUG SPECTRUM:",
+                "R/Rs =", rr,
+                "T =", T_r,
+                "r_ab =", r_ab
+            )
+
         x = h * f / (k * T_r)
 
-        # Avoid numerical overflow in exp(x)
+        # Avoid numerical overflow
         if x > 700:
             return 0.0
 
