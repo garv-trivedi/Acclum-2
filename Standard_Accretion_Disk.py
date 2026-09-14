@@ -491,6 +491,26 @@ if choice =='Eddington ratio and accretion efficiency':
 
 # Add alpha input in sidebar inputs
 alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
+
+# Convert physical accretion rate to the dimensionless quantity
+m_dot_edd = (m_dot * c**2) / (1.3e31 * m_bh)
+
+# Retrieve r_ab boundary radius
+lookup_key = (m_bh, round(m_dot_edd, 2))
+
+if lookup_key in R_AB_LOOKUP:
+    r_ab = R_AB_LOOKUP[lookup_key]
+    st.info(
+        f"Using tabulated r_ab = {r_ab:.2f} R_S "
+        f"for lookup key {lookup_key}"
+    )
+else:
+    r_ab = 50.54
+    st.warning(
+        f"No tabulated r_ab for lookup key {lookup_key}. "
+        f"Using fallback r_ab = {r_ab:.2f} R_S."
+    )
+
 angle_inclination = st.sidebar.number_input("Angle of inclination in degrees", value=0,format='%e')
 cos_i = np.cos(np.radians(angle_inclination))
 #m_dot = eddington_ratio*1.3e31*m_bh_kg/(0.1*(c**2)*m_sun_kg)
@@ -534,20 +554,6 @@ F2 = {F2:e} Hz
 
 F2/F1 = {F2/F1:e}
 """)
-
-# Convert m_dot to Eddington units to query R_AB_LOOKUP
-m_dot_edd = (m_dot * c**2) / (1.3e31 * m_bh)
-
-lookup_key = (m_bh, round(m_dot_edd, 2))
-
-if lookup_key not in R_AB_LOOKUP:
-    st.error(
-        f"No r_ab value exists in R_AB_LOOKUP for "
-        f"M = {m_bh:.3e} Msun and mdot = {m_dot_edd:.3e}."
-    )
-    st.stop()
-
-r_ab = R_AB_LOOKUP[lookup_key]
 
 #DEBUGGING---------------------------------------------------------------------------------------------------------
 st.write("DEBUG r_i/Rs =", r_i / r_s)
