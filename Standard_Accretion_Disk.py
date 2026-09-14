@@ -497,6 +497,8 @@ if choice =='Eddington ratio and accretion efficiency':
     accretion_efficiency = st.sidebar.number_input("Accretion efficiency ($\zeta$)", value=1e-1, format="%e")
     m_dot=m_dotf(eddington_ratio,accretion_efficiency)
 
+# Add alpha input in sidebar inputs
+alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
 angle_inclination = st.sidebar.number_input("Angle of inclination in degrees", value=0,format='%e')
 cos_i = np.cos(np.radians(angle_inclination))
 #m_dot = eddington_ratio*1.3e31*m_bh_kg/(0.1*(c**2)*m_sun_kg)
@@ -531,9 +533,6 @@ F2 = {F2:e} Hz
 
 F2/F1 = {F2/F1:e}
 """)
-
-# Add alpha input in sidebar inputs
-alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
 
 # Convert m_dot to Eddington units to query R_AB_LOOKUP
 m_dot_edd = (m_dot * c**2) / (1.3e31 * m_bh)
