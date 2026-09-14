@@ -416,14 +416,13 @@ def get_region_a_data(
 
    lookup_key = (m_bh, round(m_dot_edd, 2))
 
-if lookup_key not in R_AB_LOOKUP:
-    st.error(
+   if lookup_key not in R_AB_LOOKUP:
+     st.error(
         f"No r_ab value exists in R_AB_LOOKUP for "
-        f"M = {m_bh:.3e} Msun and mdot = {m_dot_edd:.3e}."
-    )
-    st.stop()
+        f"M = {m_bh:.3e} Msun and mdot = {m_dot_edd:.3e}.")
+     st.stop()
 
-r_ab = R_AB_LOOKUP[lookup_key]
+   r_ab = R_AB_LOOKUP[lookup_key]
     r_grid = np.linspace(r_in, r_ab, num_points)
 
     T_vals = temp_region_a(
