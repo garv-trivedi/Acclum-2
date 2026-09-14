@@ -505,6 +505,13 @@ if choice =='Eddington ratio and accretion efficiency':
     accretion_efficiency = st.sidebar.number_input("Accretion efficiency ($\zeta$)", value=1e-1, format="%e")
     m_dot=m_dotf(eddington_ratio,accretion_efficiency)
 
+# Add alpha input in sidebar inputs
+alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
+angle_inclination = st.sidebar.number_input("Angle of inclination in degrees", value=0,format='%e')
+cos_i = np.cos(np.radians(angle_inclination))
+#m_dot = eddington_ratio*1.3e31*m_bh_kg/(0.1*(c**2)*m_sun_kg)
+t_disk=(3*G*m_bh_kg*m_dot/(8*pi*sbc*(INNER_R**3)))**0.25
+
 #DEBUGGING------------------------------------------------------------------------------------------------------------------------------
 st.write("T at 3 Rs  =", temp(3.0))
 st.write("T at 10 Rs =", temp(10.0))
@@ -513,12 +520,6 @@ st.write("T at 50 Rs =", temp(50.0))
 st.write("T at r_ab =", temp(r_ab))
 st.write("T at 100 Rs =", temp(100.0))
 
-# Add alpha input in sidebar inputs
-alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
-angle_inclination = st.sidebar.number_input("Angle of inclination in degrees", value=0,format='%e')
-cos_i = np.cos(np.radians(angle_inclination))
-#m_dot = eddington_ratio*1.3e31*m_bh_kg/(0.1*(c**2)*m_sun_kg)
-t_disk=(3*G*m_bh_kg*m_dot/(8*pi*sbc*(INNER_R**3)))**0.25
 t_o = temp(r_o_rs)
 t_i = temp(r_i_rs)
 F1=k*t_o/h
