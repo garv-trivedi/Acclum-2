@@ -118,22 +118,20 @@ def Rs(m):
 #temperature
 def temp(rr):
     """
-    Unified disk temperature profile.
+    Unified Shakura-Sunyaev disk temperature.
 
     rr = R / R_S
     """
 
-    if rr <= r_ab:
-        return temp_region_a(rr, alpha_val, m_bh)
+    if rr < r_ab:
+        return temp_region_a( rr, alpha_val, m_bh)
+
+    elif rr < r_bc:
+        return temp_region_b(rr, alpha_val, m_bh, mdot_ss, f1, eta_E)
 
     else:
-        r = rr * r_s
-
-        t1 = (INNER_R / r) ** (3.0 / 4.0)
-        t2 = (1.0 - np.sqrt(INNER_R / r)) ** (1.0 / 4.0)
-
-        return t_disk * t1 * t2
-
+        return temp_region_c( rr, alpha_val, m_bh, mdot_ss, f1, eta_E)
+        
 #integrating method
 def simpsons_one_third_rule(ff, a, b, n,f):
     #print("in simpson's 1/3 rule")
@@ -169,32 +167,29 @@ def luminosity(f):
     integration=simpsons_one_third_rule(ff,(h*f/(k*t_i)),(h*f/(k*t_o)),10000,f)
     lum=const*integration
     return lum
-def ff2(r):
-    """
-    Radial Planck-function integrand.
 
-    r is the physical radius in metres.
-    """
+def ff2(r):
 
     try:
-        # Convert physical radius R [m] to R/Rs
+        # Physical R [m] → R/Rs
         rr = r / r_s
 
-        # Use the unified temperature profile
+        # Unified SS temperature
         T_r = temp(rr)
 
-    
         x = h * f / (k * T_r)
 
-        # Avoid numerical overflow
         if x > 700:
             return 0.0
 
         return r / np.expm1(x)
 
     except Exception as e:
-        print(f"Error at f={f}, r={r}: {e}")
+        print(
+            f"Error at f={f}, r={r}: {e}"
+        )
         return 0.0
+        
 def luminosity2(ff):
     #print('in luminosity function')
     global f
@@ -405,54 +400,19 @@ def create_cloudy_sed(ryd_list,nuLnu_list,filename="my_sed.txt"):
         mime="text/plain",
     )
 
-def get_region_a_data(
-    m,
-    mdot_edd,
-    alpha,
-    f1=1.0,
-    eta_E=0.06,
-    r_in=3.01,
-    num_points=500
-):
-    """Generate Region-(a) radial profiles."""
+def get_region_a_data(m, mdot, alpha, f1=1.0, eta_E=0.06, r_in=50.0, num_points=500):
+
+    r_ab_1, r_ab_2 = calculate_r_ab(alpha, m, mdot)
+
+    r_ab = r_ab_2
 
     r_grid = np.linspace(r_in, r_ab, num_points)
 
-    T_vals = temp_region_a(
-        r_grid,
-        alpha,
-        m
-    )
+    T_vals = temp_region_a(r_grid, alpha, m)
 
-    n_vals = density_region_a(
-        r_grid,
-        alpha,
-        m,
-        mdot_edd,
-        f1,
-        eta_E
-    )
+    n_vals = density_region_a(r_grid, alpha, m, mdot, f1, eta_E)
 
     return r_grid, T_vals, n_vals, r_ab
-
-
-def temp(rr):
-    """
-    Unified disk temperature profile.
-
-    rr = R / R_S
-    """
-
-    if rr <= r_ab:
-        return temp_region_a(rr, alpha_val, m_bh)
-
-    else:
-        r = rr * r_s
-
-        t1 = (INNER_R / r) ** (3.0 / 4.0)
-        t2 = (1.0 - np.sqrt(INNER_R / r)) ** (1.0 / 4.0)
-
-        return t_disk * t1 * t2
 
 #-----------------------------------SECTION 4----------------------------------------------------------------------
 #TAKE INPUTS
@@ -556,6 +516,28 @@ r_bc_inner, r_bc_outer = calculate_r_bc(
 r_ab = r_ab_outer
 r_bc = r_bc_outer
 #--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
+st.subheader("Shakura–Sunyaev Disk Region Boundaries")
+
+st.write( f"Disk truncation radius: " f"**{r_i_rs:.2f} R_S**")
+
+st.write( f"Region (a) → (b): " f"**{r_ab:.2f} R_S**")
+
+st.write( f"Region (b) → (c): " f"**{r_bc:.2f} R_S**")
+
+st.write( f"Outer disk radius: " f"**{r_o_rs:.2f} R_S**")
+#----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+st.subheader("Radial Regions")
+
+if r_i_rs < r_ab:
+    st.write( f"Region (a): " f"{r_i_rs:.2f} - {r_ab:.2f} R_S")
+
+if r_ab < r_bc:
+    st.write( f"Region (b): " f"{r_ab:.2f} - {r_bc:.2f} R_S")
+
+if r_bc < r_o_rs:
+    st.write( f"Region (c): " f"{r_bc:.2f} - {r_o_rs:.2f} R_S")
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
 t_o = temp(r_o_rs)
 t_i = temp(r_i_rs)
