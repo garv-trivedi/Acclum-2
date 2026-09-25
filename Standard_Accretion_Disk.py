@@ -571,13 +571,13 @@ F2/F1 = {F2/F1:e}
 """)
 
 #DEBUGGING---------------------------------------------------------------------------------------------------------
-st.write("DEBUG r_i/Rs =", r_i / r_s)
-st.write("DEBUG r_ab/Rs =", r_ab)
-st.write("DEBUG r_o/Rs =", r_o / r_s)
-st.write("DEBUG M =", m_bh)
-st.write("DEBUG mdot_edd =", m_dot_edd)
-st.write("DEBUG r_ab =", r_ab)
-st.write("DEBUG lookup key =", (m_bh, round(m_dot_edd, 2)))
+#st.write("DEBUG r_i/Rs =", r_i / r_s)
+#st.write("DEBUG r_ab/Rs =", r_ab)
+#st.write("DEBUG r_o/Rs =", r_o / r_s)
+#st.write("DEBUG M =", m_bh)
+#st.write("DEBUG mdot_edd =", m_dot_edd)
+#st.write("DEBUG r_ab =", r_ab)
+#st.write("DEBUG lookup key =", (m_bh, round(m_dot_edd, 2)))
 
 # Display r_ab explicitly under Sidebar Parameters
 st.sidebar.subheader('Parameters')
