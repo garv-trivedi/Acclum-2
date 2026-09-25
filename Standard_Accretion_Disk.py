@@ -8,9 +8,11 @@ import warnings
 import os
 from io import BytesIO
 import base64
-from constants import R_AB_LOOKUP
-from Temp_Profile import density_region_a, temp_region_a
 from The_Plotting_function import plot_region_a
+from r_ab import calculate_r_ab
+from r_bc import calculate_r_bc
+
+from Temp_Profile import (temp_region_a, density_region_a, temp_region_b, density_region_b, temp_region_c, density_region_c,)
 
 #st.write("ACCLUM-1.00")
 #----------------------------------SECTION 1----------------------------------------------------------
@@ -489,27 +491,39 @@ if choice =='Eddington ratio and accretion efficiency':
     accretion_efficiency = st.sidebar.number_input("Accretion efficiency ($\zeta$)", value=1e-1, format="%e")
     m_dot=m_dotf(eddington_ratio,accretion_efficiency)
 
+# ------------------------------------------------------------
+# Shakura-Sunyaev parameters
+# ------------------------------------------------------------
+
+f1 = st.sidebar.number_input(
+    r"$f_1$",
+    value=1.0,
+    min_value=0.000001,
+    format="%.6f"
+)
+
+eta_E = st.sidebar.number_input(
+    r"$\eta_E$",
+    value=0.06,
+    min_value=0.000001,
+    format="%.6f"
+)
+
+# Physical accretion rate: kg/s -> Msun/yr
+m_dot_msun_yr = (
+    m_dot * 31536000 / m_sun_kg
+)
+
+# Dimensionless accretion rate used in
+# the Shakura-Sunyaev equations
+mdot_ss = (m_dot_msun_yr / (f1 * (0.06 / eta_E) * 3.0e-8 * m_bh))
+#------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
+
 # Add alpha input in sidebar inputs
 alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
 
-# Convert physical accretion rate to the dimensionless quantity
-m_dot_edd = (m_dot * c**2) / (1.3e31 * m_bh)
-
 # Retrieve r_ab boundary radius
 lookup_key = (m_bh, round(m_dot_edd, 2))
-
-if lookup_key in R_AB_LOOKUP:
-    r_ab = R_AB_LOOKUP[lookup_key]
-    st.info(
-        f"Using tabulated r_ab = {r_ab:.2f} R_S "
-        f"for lookup key {lookup_key}"
-    )
-else:
-    r_ab = 50.54
-    st.warning(
-        f"No tabulated r_ab for lookup key {lookup_key}. "
-        f"Using fallback r_ab = {r_ab:.2f} R_S."
-    )
 
 angle_inclination = st.sidebar.number_input("Angle of inclination in degrees", value=0,format='%e')
 cos_i = np.cos(np.radians(angle_inclination))
@@ -523,6 +537,25 @@ t_disk=(3*G*m_bh_kg*m_dot/(8*pi*sbc*(INNER_R**3)))**0.25
 #st.write("T at 50 Rs =", temp(50.0))
 #st.write("T at r_ab =", temp(r_ab))
 #st.write("T at 100 Rs =", temp(100.0))
+
+# ------------------------------------------------------------
+# Calculate Shakura-Sunyaev boundary radii
+# ------------------------------------------------------------
+
+r_ab_inner, r_ab_outer = calculate_r_ab(
+    alpha_val,
+    m_bh,
+    mdot_ss
+)
+
+r_bc_inner, r_bc_outer = calculate_r_bc(
+    mdot_ss
+)
+
+# Physical outer roots in R/Rs units
+r_ab = r_ab_outer
+r_bc = r_bc_outer
+#--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
 t_o = temp(r_o_rs)
 t_i = temp(r_i_rs)
