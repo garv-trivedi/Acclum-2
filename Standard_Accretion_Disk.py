@@ -482,9 +482,6 @@ mdot_ss = (m_dot_msun_yr / (f1 * (0.06 / eta_E) * 3.0e-8 * m_bh))
 # Add alpha input in sidebar inputs
 alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
 
-# Retrieve r_ab boundary radius
-lookup_key = (m_bh, round(m_dot_edd, 2))
-
 angle_inclination = st.sidebar.number_input("Angle of inclination in degrees", value=0,format='%e')
 cos_i = np.cos(np.radians(angle_inclination))
 #m_dot = eddington_ratio*1.3e31*m_bh_kg/(0.1*(c**2)*m_sun_kg)
