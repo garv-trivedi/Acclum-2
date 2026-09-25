@@ -1,82 +1,195 @@
 import numpy as np
 
-def the_R_vs_T_part(p):
-    p+=1
-    global radii, temperatures, tmax
-    st.markdown('# Radius-Temperature relationship')
-    st.latex(r"where, T(r)^4 =\left( \frac {3GM_{BH}\dot{M}} {8 \pi \sigma}\right)\left [\frac{1 - \sqrt{\frac{r_i}{r}}}{r^3} \right]")
-    # Creating list of radii
-    radii = generate_pattern(r_o_rs)
 
+# ============================================================
+# REGION (a)
+# ============================================================
 
 def temp_region_a(r_rs, alpha, m):
     """
-    Region (a) temperature.
+    Temperature in Region (a).
+
     r_rs = R / R_S
     m    = M_BH / M_sun
+
+    Returns K.
     """
 
     r_rs = np.asarray(r_rs, dtype=float)
 
     return (
         2.3e7
-        * 3.0**(3.0 / 4.0)
-        * (alpha * m)**(-1.0 / 4.0)
-        * r_rs**(-3.0 / 4.0)
+        * 3.0 ** (3.0 / 4.0)
+        * (alpha * m) ** (-1.0 / 4.0)
+        * r_rs ** (-3.0 / 4.0)
     )
-    
-def density_region_a(r_rs, alpha, m, mdot_edd,
-                     f1=1.0, eta_E=0.06):
+
+
+def density_region_a(
+    r_rs,
+    alpha,
+    m,
+    mdot,
+    f1=1.0,
+    eta_E=0.06
+):
+    """
+    Number density in Region (a).
+
+    r_rs = R / R_S
+    mdot = Shakura-Sunyaev dimensionless mdot
+
+    Returns cm^-3.
+    """
 
     r_rs = np.asarray(r_rs, dtype=float)
 
-    boundary_term = (
-        1.0 - np.sqrt(3.0 / r_rs)
-    )**(-2)
-
     return (
         4.3e17
-        * 3.0**(-3.0 / 2.0)
-        * (f1 * (0.06 / eta_E))**(-2)
-        * alpha**(-1.0)
-        * m**(-1.0)
-        * mdot_edd**(-2.0)
-        * r_rs**(3.0 / 2.0)
-        * boundary_term
+        * 3.0 ** (-3.0 / 2.0)
+        * (
+            f1 * (0.06 / eta_E)
+        ) ** (-2.0)
+        * alpha ** (-1.0)
+        * m ** (-1.0)
+        * mdot ** (-2.0)
+        * r_rs ** (3.0 / 2.0)
+        * (
+            1.0 - np.sqrt(3.0 / r_rs)
+        ) ** (-2.0)
     )
-    
-    # Storing values of r and t together in R_vs_T
-    dataset=pd.DataFrame({"radius in rs":radii,"temperatures":temperatures})
 
-    # Finding maximum and minimum temperatures
-    try:
-        tmax = max(temperatures)
-        tmin = min(temperatures)
-    except:
-        tmin, tmax = 'undetermined', 'undetermined'
-    try:     
-       # Finding r at maximum temperature
-        r_tmax = dataset.loc[dataset['temperatures'] == tmax, 'radius in rs'].values[0]
-        #display maximum temprature
-        st.info(f'The maximum temperature = {tmax:e} K observed at radius {r_tmax:e} Rs.')
-        st.info(f'The minimum temperature = {temp(r_o_rs)} K ')
-    except:
-        st.warning('there is some issue in calculating error')
 
-    # Display options for viewing data
-    option = st.selectbox("Select:", ["graph of (R vs T) in logscale",\
-                                      "data table of (R vs T)?",\
-                                     "graph of (R vs T) without logscale"], key='tvrhere2201{p}')  # Unique key
+# ============================================================
+# REGION (b)
+# ============================================================
 
-    if option == "data table of (R vs T)?":
-        save_data(dataset)
-        if st.button("show data"):
-            st.table(dataset)
-            
+def temp_region_b(
+    r_rs,
+    alpha,
+    m,
+    mdot,
+    f1=1.0,
+    eta_E=0.06
+):
+    """
+    Temperature in Region (b).
 
-    # Plotting the graph for radius vs temperature
-    elif option == "graph of (R vs T) in logscale":
-        plot_log_scale(radii, temperatures,0,r_o_rs,tmin,tmax,temperature=True,xlabel="log(radius) (Rs)",ylabel="log(temperature) (K)")
+    Returns K.
+    """
 
-    elif option == "graph of (R vs T) without logscale":
-        plotit(radii, temperatures,xlabel="Radius (Rs)",ylabel="Temperature  (K)")
+    r_rs = np.asarray(r_rs, dtype=float)
+
+    return (
+        3.1e8
+        * 3.0 ** (9.0 / 10.0)
+        * (
+            f1 * (0.06 / eta_E)
+        ) ** (2.0 / 5.0)
+        * alpha ** (-1.0 / 5.0)
+        * m ** (-1.0 / 5.0)
+        * mdot ** (2.0 / 5.0)
+        * r_rs ** (-9.0 / 10.0)
+        * (
+            1.0 - np.sqrt(3.0 / r_rs)
+        ) ** (2.0 / 5.0)
+    )
+
+
+def density_region_b(
+    r_rs,
+    alpha,
+    m,
+    mdot,
+    f1=1.0,
+    eta_E=0.06
+):
+    """
+    Number density in Region (b).
+
+    Returns cm^-3.
+    """
+
+    r_rs = np.asarray(r_rs, dtype=float)
+
+    return (
+        4.2e24
+        * 3.0 ** (33.0 / 20.0)
+        * (
+            f1 * (0.06 / eta_E)
+        ) ** (2.0 / 5.0)
+        * alpha ** (-7.0 / 10.0)
+        * m ** (-7.0 / 10.0)
+        * mdot ** (2.0 / 5.0)
+        * r_rs ** (-33.0 / 20.0)
+        * (
+            1.0 - np.sqrt(3.0 / r_rs)
+        ) ** (2.0 / 5.0)
+    )
+
+
+# ============================================================
+# REGION (c)
+# ============================================================
+
+def temp_region_c(
+    r_rs,
+    alpha,
+    m,
+    mdot,
+    f1=1.0,
+    eta_E=0.06
+):
+    """
+    Temperature in Region (c).
+
+    Returns K.
+    """
+
+    r_rs = np.asarray(r_rs, dtype=float)
+
+    return (
+        8.6e7
+        * 3.0 ** (3.0 / 4.0)
+        * (
+            f1 * (0.06 / eta_E)
+        ) ** (3.0 / 10.0)
+        * alpha ** (-1.0 / 5.0)
+        * m ** (-1.0 / 5.0)
+        * mdot ** (3.0 / 10.0)
+        * r_rs ** (-3.0 / 4.0)
+        * (
+            1.0 - np.sqrt(3.0 / r_rs)
+        ) ** (3.0 / 10.0)
+    )
+
+
+def density_region_c(
+    r_rs,
+    alpha,
+    m,
+    mdot,
+    f1=1.0,
+    eta_E=0.06
+):
+    """
+    Number density in Region (c).
+
+    Returns cm^-3.
+    """
+
+    r_rs = np.asarray(r_rs, dtype=float)
+
+    return (
+        3.0e25
+        * 3.0 ** (15.0 / 8.0)
+        * (
+            f1 * (0.06 / eta_E)
+        ) ** (11.0 / 12.0)
+        * alpha ** (-7.0 / 10.0)
+        * m ** (-7.0 / 10.0)
+        * mdot ** (11.0 / 12.0)
+        * r_rs ** (-15.0 / 8.0)
+        * (
+            1.0 - np.sqrt(3.0 / r_rs)
+        ) ** (11.0 / 20.0))
