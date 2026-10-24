@@ -11,6 +11,8 @@ import base64
 from The_Plotting_function import plot_region_a
 from r_ab import calculate_r_ab
 from r_bc import calculate_r_bc
+from scipy.integrate import simpson
+from Emissivity_Profile import (emission_flux_nu_region_a, emission_flux_nu_region_b, emission_flux_nu_region_c,)
 
 from Temp_Profile import (temp_region_a, density_region_a, temp_region_b, density_region_b, temp_region_c, density_region_c,)
 
@@ -168,37 +170,153 @@ def luminosity(f):
     lum=const*integration
     return lum
 
-def ff2(r):
+# ============================================================
+# SECTION 3: REGION-WISE SPECTRAL LUMINOSITY
+# ============================================================
 
-    try:
-        # Physical R [m] → R/Rs
-        rr = r / r_s
+def integrate_region_lnu(
+    nu_hz,
+    region,
+    r_lower_rs,
+    r_upper_rs,
+    n_points=1201,
+):
+    """
+    Integrate one disk region.
 
-        # Unified SS temperature
-        T_r = temp(rr)
+    Radial limits are in R/R_S.
+    Integration uses physical radii in metres.
+    Emission functions return W m^-2 Hz^-1.
+    """
 
-        x = h * f / (k * T_r)
-
-        if x > 700:
-            return 0.0
-
-        return r / np.expm1(x)
-
-    except Exception as e:
-        print(
-            f"Error at f={f}, r={r}: {e}"
-        )
+    if r_upper_rs <= r_lower_rs:
         return 0.0
-        
-def luminosity2(ff):
-    #print('in luminosity function')
-    global f
-    f=ff
-    A=16*(pi**2)*h*f**3/c**2
-    integration=simpsons_one_third_rule(ff2,r_i,r_o,10000,f)
-    lum=cos_i*A*integration
-    return lum
 
+    if n_points < 3:
+        raise ValueError("n_points must be at least 3.")
+
+    # Simpson integration requires an even number of intervals.
+    if (n_points - 1) % 2 != 0:
+        n_points += 1
+
+    # App radial coordinate: R/R_S
+    r_rs_values = np.linspace(
+        r_lower_rs,
+        r_upper_rs,
+        n_points,
+    )
+
+    # Physical radius in metres.
+    R_values = r_rs_values * r_s
+
+    # Evaluate the corresponding region's spectral surface flux.
+    if region == "a":
+
+        F_nu = emission_flux_nu_region_a(
+            nu_hz,
+            r_rs_values,
+            alpha_val,
+            m_bh,
+        )
+
+    elif region == "b":
+
+        F_nu = emission_flux_nu_region_b(
+            nu_hz,
+            r_rs_values,
+            alpha_val,
+            m_bh,
+            mdot_ss,
+            f1=f1,
+            eta_E=eta_E,
+            model=region_b_model,
+        )
+
+    elif region == "c":
+
+        F_nu = emission_flux_nu_region_c(
+            nu_hz,
+            r_rs_values,
+            alpha_val,
+            m_bh,
+            mdot_ss,
+            f1=f1,
+            eta_E=eta_E,
+        )
+
+    else:
+        raise ValueError(
+            "Region must be 'a', 'b', or 'c'."
+        )
+
+    # Integrand: R * F_nu(R)
+    radial_integrand = R_values * F_nu
+
+    return float(
+        simpson(
+            radial_integrand,
+            x=R_values,
+        )
+    )
+
+
+def luminosity2_components(nu_hz):
+    """
+    Calculate the separate spectral luminosities of regions a, b, c.
+
+    Keeps the projected, isotropic-equivalent luminosity convention
+    used by the existing app.
+    """
+
+    # Region (a): truncation radius -> a/b boundary.
+    a_lower = r_i_rs
+    a_upper = min(r_ab, r_o_rs)
+
+    # Region (b): a/b boundary -> b/c boundary.
+    b_lower = max(r_i_rs, r_ab)
+    b_upper = min(r_bc, r_o_rs)
+
+    # Region (c): b/c boundary -> outer disk radius.
+    c_lower = max(r_i_rs, r_bc)
+    c_upper = r_o_rs
+
+    integral_a = integrate_region_lnu(
+        nu_hz, "a", a_lower, a_upper
+    )
+
+    integral_b = integrate_region_lnu(
+        nu_hz, "b", b_lower, b_upper
+    )
+
+    integral_c = integrate_region_lnu(
+        nu_hz, "c", c_lower, c_upper
+    )
+
+    # F_nu is the emergent surface flux per face.
+    # This prefactor preserves the old app's L_nu normalization.
+    prefactor = 8.0 * pi * cos_i
+
+    return {
+        "a": prefactor * integral_a,
+        "b": prefactor * integral_b,
+        "c": prefactor * integral_c,
+    }
+
+
+def luminosity2(nu_hz):
+    """
+    Total spectral luminosity in W/Hz.
+
+    Keeps the scalar interface used by the existing spectrum code.
+    """
+
+    components = luminosity2_components(nu_hz)
+
+    return (
+        components["a"]
+        + components["b"]
+        + components["c"]
+    )
 
 #THE ULTIMATE PLOTTER
 
@@ -479,6 +597,21 @@ m_dot_msun_yr = (
 mdot_ss = (m_dot_msun_yr / (f1 * (0.06 / eta_E) * 3.0e-8 * m_bh))
 #------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------#
 
+region_b_model_label = st.sidebar.selectbox(
+    "Region (b) emission prescription",
+    [
+        "Homogeneous medium",
+        "Exponentially stratified atmosphere",
+    ],
+    index=0,
+)
+
+region_b_model = (
+    "homogeneous"
+    if region_b_model_label == "Homogeneous medium"
+    else "exponential"
+)
+
 # Add alpha input in sidebar inputs
 alpha_val = st.sidebar.number_input("Viscosity parameter (α)", value=0.1, step=0.01)
 
@@ -687,6 +820,53 @@ def the_Frequency_vs_Luminosity_part2(p):
         else:
             luminosities.append(0)
 
+        # ============================================================
+    # DIAGNOSTIC: REGION-WISE SPECTRAL LUMINOSITY
+    # ============================================================
+
+    with st.expander("Debug: Region-wise emissivity contributions"):
+
+        if len(frequencies) > 0:
+
+            diag_nu = st.selectbox(
+                "Select frequency for diagnostic (Hz)",
+                options=frequencies,
+                index=len(frequencies) // 2,
+                format_func=lambda x: f"{x:.4e} Hz",
+                key="diagnostic_frequency",
+            )
+
+            # Calculate each region's contribution separately
+            components = luminosity2_components(float(diag_nu))
+
+            L_a = components["a"]
+            L_b = components["b"]
+            L_c = components["c"]
+            L_total = L_a + L_b + L_c
+
+            st.write(f"Frequency = {diag_nu:.6e} Hz")
+
+            st.write(f"Region (a): L_nu = {L_a:.6e} W/Hz")
+            st.write(f"Region (b): L_nu = {L_b:.6e} W/Hz")
+            st.write(f"Region (c): L_nu = {L_c:.6e} W/Hz")
+
+            st.write(f"Sum of regions: {L_total:.6e} W/Hz")
+
+            st.write(
+                f"luminosity2(frequency): "
+                f"{luminosity2(float(diag_nu)):.6e} W/Hz"
+            )
+
+            st.write("**Radial boundaries (in Schwarzschild radii)**")
+
+            st.write(f"Inner radius: {r_i_rs:.6f} R_S")
+            st.write(f"a/b boundary: {r_ab:.6f} R_S")
+            st.write(f"b/c boundary: {r_bc:.6f} R_S")
+            st.write(f"Outer radius: {r_o_rs:.6f} R_S")
+
+        else:
+            st.warning("No frequencies available for diagnostics.")
+    
     #writing formulas using latex
             
     col1,col2=st.columns([2,1.5])
