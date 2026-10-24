@@ -12,7 +12,7 @@ from The_Plotting_function import plot_region_a
 from r_ab import calculate_r_ab
 from r_bc import calculate_r_bc
 from scipy.integrate import simpson
-from Emissivity_Profile import (emission_flux_nu_region_a, emission_flux_nu_region_b, emission_flux_nu_region_c,)
+from emissivity_profile import (emission_flux_nu_region_a, emission_flux_nu_region_b, emission_flux_nu_region_c,)
 
 from Temp_Profile import (temp_region_a, density_region_a, temp_region_b, density_region_b, temp_region_c, density_region_c,)
 
